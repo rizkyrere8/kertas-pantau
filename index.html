@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Progres Materi Presentasi</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <style>
   :root{
     --bg: #f6f7fb;
@@ -787,6 +788,70 @@
 
 <script>
 
+/* ============================================================
+   SUPABASE — database bersama semua perangkat
+   ============================================================ */
+const SUPABASE_URL  = 'https://siinsjpvzwrriqwrbgpd.supabase.co';
+const SUPABASE_KEY  = 'sb_publishable_SBjBS9QsXaruioOpKDtSVg_URP59zAw';
+const _sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+let _sbRowId   = null;   // UUID baris di tabel
+let _syncTimer = null;
+let _syncChannel = null;
+
+async function sbLoad(){
+  try{
+    const { data: rows, error } = await _sb.from('progres_materi').select('*').limit(1);
+    if(error) throw error;
+    if(rows && rows.length > 0){
+      _sbRowId = rows[0].id;
+      const remote = rows[0].data;
+      if(Array.isArray(remote) && remote.length > 0){
+        data = remote.map(normalizeRow);
+        // Sync juga ke localStorage sebagai cache offline
+        safeSetStorage(STORAGE_KEY, JSON.stringify(data));
+      }
+    }
+  } catch(e){
+    console.warn('Supabase load gagal, pakai data lokal:', e);
+  }
+}
+
+async function sbSave(){
+  if(!_sbRowId) return;
+  try{
+    const clean = data.map(r => ({...r, historyOpen: false, babOpen: false}));
+    await _sb.from('progres_materi').update({ data: clean, updated_at: new Date().toISOString() }).eq('id', _sbRowId);
+  } catch(e){
+    console.warn('Supabase save gagal:', e);
+  }
+}
+
+function sbSubscribe(){
+  // Realtime — otomatis update jika ada perangkat lain yang menyimpan
+  _syncChannel = _sb.channel('progres-sync')
+    .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'progres_materi' }, payload => {
+      const remote = payload.new?.data;
+      if(Array.isArray(remote) && remote.length > 0){
+        // Simpan state UI (open/collapse) dari data lokal
+        const uiState = {};
+        data.forEach(r => { uiState[r.id] = { historyOpen: r.historyOpen, babOpen: r.babOpen }; });
+        data = remote.map(r => {
+          const r2 = normalizeRow(r);
+          if(uiState[r2.id]){
+            r2.historyOpen = uiState[r2.id].historyOpen;
+            r2.babOpen     = uiState[r2.id].babOpen;
+          }
+          return r2;
+        });
+        safeSetStorage(STORAGE_KEY, JSON.stringify(data));
+        render();
+        setSaveStatus('saved');
+      }
+    })
+    .subscribe();
+}
+
 const STORAGE_KEY = 'progres_materi_data_v3';
 const STORAGE_KEY_OLD = 'progres_materi_data_v2';
 const STORAGE_KEY_IDENTITY = 'progres_materi_identity_v1';
@@ -1275,6 +1340,8 @@ function persistNow(){
     setSaveStatus('error');
   }
   writeAutoBackup();
+  // Simpan ke Supabase (async, tidak blokir UI)
+  sbSave().catch(() => {});
 }
 
 function save(){
@@ -2537,8 +2604,15 @@ restoreFileEl.addEventListener('change', () => {
   kelEl.addEventListener('input', saveIdentity);
 })();
 
-render();
-setSaveStatus(storageAvailable ? 'saved' : 'error');
+// Muat data dari Supabase dulu, lalu render
+(async () => {
+  setSaveStatus('saving'); // tampilkan "menyimpan..." saat loading
+  await sbLoad();
+  data = data.map(normalizeRow);
+  render();
+  setSaveStatus(storageAvailable ? 'saved' : 'error');
+  sbSubscribe(); // langganan perubahan realtime
+})();
 </script>
 </body>
 </html>
