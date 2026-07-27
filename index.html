@@ -2594,10 +2594,16 @@ restoreFileEl.addEventListener('change', () => {
   } catch(e){}
 
   function saveIdentity(){
-    safeSetStorage(STORAGE_KEY_IDENTITY, JSON.stringify({
-      nama: namEl.value,
-      kelas: kelEl.value
-    }));
+    const identity = { nama: namEl.value, kelas: kelEl.value };
+    safeSetStorage(STORAGE_KEY_IDENTITY, JSON.stringify(identity));
+    // Sync identitas ke Supabase (simpan di baris yang sama sebagai field)
+    if(_sbRowId){
+      _sb.from('progres_materi')
+        .update({ identity: identity, updated_at: new Date().toISOString() })
+        .eq('id', _sbRowId)
+        .then(()=>{})
+        .catch(()=>{});
+    }
   }
 
   namEl.addEventListener('input', saveIdentity);
