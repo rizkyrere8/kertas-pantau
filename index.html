@@ -808,8 +808,12 @@ async function sbLoad(){
       const remote = rows[0].data;
       if(Array.isArray(remote) && remote.length > 0){
         data = remote.map(normalizeRow);
-        // Sync juga ke localStorage sebagai cache offline
         safeSetStorage(STORAGE_KEY, JSON.stringify(data));
+      }
+      // Load identity dari Supabase jika ada
+      const remoteIdent = rows[0].identity;
+      if(remoteIdent && (remoteIdent.nama || remoteIdent.kelas)){
+        safeSetStorage(STORAGE_KEY_IDENTITY, JSON.stringify(remoteIdent));
       }
     }
   } catch(e){
@@ -821,7 +825,13 @@ async function sbSave(){
   if(!_sbRowId) return;
   try{
     const clean = data.map(r => ({...r, historyOpen: false, babOpen: false}));
-    await _sb.from('progres_materi').update({ data: clean, updated_at: new Date().toISOString() }).eq('id', _sbRowId);
+    let ident = {};
+    try{ ident = JSON.parse(safeGetStorage(STORAGE_KEY_IDENTITY) || '{}'); } catch(ex){}
+    await _sb.from('progres_materi').update({
+      data: clean,
+      identity: ident,
+      updated_at: new Date().toISOString()
+    }).eq('id', _sbRowId);
   } catch(e){
     console.warn('Supabase save gagal:', e);
   }
@@ -2596,14 +2606,8 @@ restoreFileEl.addEventListener('change', () => {
   function saveIdentity(){
     const identity = { nama: namEl.value, kelas: kelEl.value };
     safeSetStorage(STORAGE_KEY_IDENTITY, JSON.stringify(identity));
-    // Sync identitas ke Supabase (simpan di baris yang sama sebagai field)
-    if(_sbRowId){
-      _sb.from('progres_materi')
-        .update({ identity: identity, updated_at: new Date().toISOString() })
-        .eq('id', _sbRowId)
-        .then(()=>{})
-        .catch(()=>{});
-    }
+    // Sync ke Supabase bersamaan dengan data
+    sbSave().catch(()=>{});
   }
 
   namEl.addEventListener('input', saveIdentity);
