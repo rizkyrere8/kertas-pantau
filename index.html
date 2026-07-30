@@ -837,26 +837,60 @@ async function sbSave(){
   }
 }
 
+// Track apakah user sedang aktif mengedit
+let _userEditing = false;
+let _editingTimer = null;
+let _pendingRemote = null; // simpan update dari server yang tertunda
+
+function markEditing(){
+  _userEditing = true;
+  clearTimeout(_editingTimer);
+  // Anggap user selesai mengedit jika tidak ada aktivitas 2 detik
+  _editingTimer = setTimeout(() => {
+    _userEditing = false;
+    // Kalau ada update yang tertunda, terapkan sekarang
+    if(_pendingRemote){
+      applyRemoteUpdate(_pendingRemote);
+      _pendingRemote = null;
+    }
+  }, 2000);
+}
+
+function applyRemoteUpdate(remote){
+  // Jangan timpa kalau update ini berasal dari save kita sendiri
+  // (cek dengan bandingkan isi data — kalau sama, skip render)
+  const localStr = JSON.stringify(data.map(r=>({...r,historyOpen:false,babOpen:false})));
+  const remoteStr = JSON.stringify(remote.map(r=>({...r,historyOpen:false,babOpen:false})));
+  if(localStr === remoteStr) return; // update dari diri sendiri, skip
+
+  const uiState = {};
+  data.forEach(r => { uiState[r.id] = { historyOpen: r.historyOpen, babOpen: r.babOpen }; });
+  data = remote.map(r => {
+    const r2 = normalizeRow(r);
+    if(uiState[r2.id]){
+      r2.historyOpen = uiState[r2.id].historyOpen;
+      r2.babOpen     = uiState[r2.id].babOpen;
+    }
+    return r2;
+  });
+  safeSetStorage(STORAGE_KEY, JSON.stringify(data));
+  render();
+  setSaveStatus('saved');
+}
+
 function sbSubscribe(){
   // Realtime — otomatis update jika ada perangkat lain yang menyimpan
   _syncChannel = _sb.channel('progres-sync')
     .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'progres_materi' }, payload => {
       const remote = payload.new?.data;
-      if(Array.isArray(remote) && remote.length > 0){
-        // Simpan state UI (open/collapse) dari data lokal
-        const uiState = {};
-        data.forEach(r => { uiState[r.id] = { historyOpen: r.historyOpen, babOpen: r.babOpen }; });
-        data = remote.map(r => {
-          const r2 = normalizeRow(r);
-          if(uiState[r2.id]){
-            r2.historyOpen = uiState[r2.id].historyOpen;
-            r2.babOpen     = uiState[r2.id].babOpen;
-          }
-          return r2;
-        });
-        safeSetStorage(STORAGE_KEY, JSON.stringify(data));
-        render();
-        setSaveStatus('saved');
+      if(!Array.isArray(remote) || remote.length === 0) return;
+
+      if(_userEditing){
+        // User sedang mengedit — tunda update, jangan ganggu
+        _pendingRemote = remote;
+        setSaveStatus('saved'); // tetap tunjukkan saved
+      } else {
+        applyRemoteUpdate(remote);
       }
     })
     .subscribe();
@@ -1355,6 +1389,8 @@ function persistNow(){
 }
 
 function save(){
+  // Tandai bahwa user sedang aktif mengedit
+  markEditing();
   // Show "saving" immediately, then debounce the actual write
   // so rapid typing doesn't hammer localStorage on every keystroke.
   setSaveStatus('saving');
