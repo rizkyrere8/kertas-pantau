@@ -837,6 +837,29 @@ async function sbSave(){
   }
 }
 
+// Simpan identity saja ke Supabase (lebih ringan, tidak perlu kirim semua data)
+let _identSaveTimer = null;
+function sbSaveIdentity(identity){
+  // Debounce 800ms agar tidak spam saat mengetik
+  clearTimeout(_identSaveTimer);
+  _identSaveTimer = setTimeout(async () => {
+    // Kalau _sbRowId belum ada, tunggu sampai ada (max 5 detik)
+    let waited = 0;
+    while(!_sbRowId && waited < 5000){
+      await new Promise(r => setTimeout(r, 200));
+      waited += 200;
+    }
+    if(!_sbRowId) return;
+    try{
+      await _sb.from('progres_materi')
+        .update({ identity: identity, updated_at: new Date().toISOString() })
+        .eq('id', _sbRowId);
+    } catch(e){
+      console.warn('Supabase identity save gagal:', e);
+    }
+  }, 800);
+}
+
 // Track apakah user sedang aktif mengedit
 let _userEditing = false;
 let _editingTimer = null;
@@ -2642,8 +2665,8 @@ restoreFileEl.addEventListener('change', () => {
   function saveIdentity(){
     const identity = { nama: namEl.value, kelas: kelEl.value };
     safeSetStorage(STORAGE_KEY_IDENTITY, JSON.stringify(identity));
-    // Sync ke Supabase bersamaan dengan data
-    sbSave().catch(()=>{});
+    // Simpan identity langsung ke Supabase (tidak tunggu sbSave)
+    sbSaveIdentity(identity);
   }
 
   namEl.addEventListener('input', saveIdentity);
@@ -2652,12 +2675,20 @@ restoreFileEl.addEventListener('change', () => {
 
 // Muat data dari Supabase dulu, lalu render
 (async () => {
-  setSaveStatus('saving'); // tampilkan "menyimpan..." saat loading
+  setSaveStatus('saving');
   await sbLoad();
   data = data.map(normalizeRow);
+  // Isi field nama & kelas dari Supabase ke input form
+  try{
+    const ident = JSON.parse(safeGetStorage(STORAGE_KEY_IDENTITY) || '{}');
+    const namEl = document.getElementById('identityNama');
+    const kelEl = document.getElementById('identityKelas');
+    if(namEl && ident.nama)  namEl.value = ident.nama;
+    if(kelEl && ident.kelas) kelEl.value = ident.kelas;
+  } catch(e){}
   render();
   setSaveStatus(storageAvailable ? 'saved' : 'error');
-  sbSubscribe(); // langganan perubahan realtime
+  sbSubscribe();
 })();
 </script>
 </body>
