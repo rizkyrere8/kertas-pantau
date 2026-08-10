@@ -649,6 +649,45 @@
 .lock-error{margin-top:12px;font-size:12px;color:#f87171;font-weight:600;min-height:18px;transition:opacity .2s;}
 .lock-footer{margin-top:20px;font-size:11px;color:rgba(255,255,255,.25);font-weight:500;}
 
+/* ===== HALAMAN PILIH SANTRI ===== */
+.santri-screen{position:fixed;inset:0;background:linear-gradient(135deg,#1e1b4b 0%,#312e81 50%,#4338ca 100%);z-index:9998;display:none;flex-direction:column;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;overflow-y:auto;}
+.santri-screen.active{display:flex;}
+.santri-header{padding:40px 20px 24px;text-align:center;}
+.santri-header-icon{font-size:36px;margin-bottom:12px;}
+.santri-header-title{font-size:24px;font-weight:800;color:#fff;letter-spacing:-.3px;margin-bottom:4px;}
+.santri-header-sub{font-size:13px;color:rgba(255,255,255,.5);font-weight:500;}
+.santri-body{flex:1;padding:0 16px 40px;max-width:480px;width:100%;margin:0 auto;}
+.santri-search{width:100%;background:rgba(255,255,255,.1);border:1.5px solid rgba(255,255,255,.2);border-radius:12px;padding:12px 16px;font-size:14px;color:#fff;outline:none;margin-bottom:16px;box-sizing:border-box;font-family:inherit;}
+.santri-search::placeholder{color:rgba(255,255,255,.35);}
+.santri-search:focus{border-color:rgba(255,255,255,.4);}
+.santri-list{display:flex;flex-direction:column;gap:10px;margin-bottom:16px;}
+.santri-item{background:rgba(255,255,255,.08);border:1.5px solid rgba(255,255,255,.12);border-radius:14px;padding:14px 16px;cursor:pointer;display:flex;align-items:center;gap:12px;transition:all .15s;user-select:none;}
+.santri-item:hover{background:rgba(255,255,255,.14);border-color:rgba(255,255,255,.25);transform:translateY(-1px);}
+.santri-item:active{transform:scale(.98);}
+.santri-avatar{width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,#6366f1,#a855f7);display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800;color:#fff;flex-shrink:0;}
+.santri-info{flex:1;min-width:0;}
+.santri-item-nama{font-size:15px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.santri-item-kelas{font-size:12px;color:rgba(255,255,255,.5);margin-top:2px;font-weight:500;}
+.santri-item-pct{font-size:13px;font-weight:800;padding:4px 10px;border-radius:99px;background:rgba(255,255,255,.1);color:rgba(255,255,255,.8);flex-shrink:0;}
+.santri-delete-btn{width:30px;height:30px;border-radius:50%;background:rgba(239,68,68,.2);border:none;cursor:pointer;color:#f87171;font-size:14px;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:background .15s;}
+.santri-delete-btn:hover{background:rgba(239,68,68,.4);}
+.santri-add-btn{width:100%;background:rgba(255,255,255,.1);border:2px dashed rgba(255,255,255,.25);border-radius:14px;padding:14px;cursor:pointer;color:rgba(255,255,255,.6);font-size:14px;font-weight:600;display:flex;align-items:center;justify-content:center;gap:8px;transition:all .15s;font-family:inherit;}
+.santri-add-btn:hover{background:rgba(255,255,255,.15);border-color:rgba(255,255,255,.4);color:#fff;}
+.santri-empty{text-align:center;padding:40px 20px;color:rgba(255,255,255,.4);font-size:14px;}
+
+/* Modal tambah santri */
+.santri-modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:10000;display:none;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(4px);}
+.santri-modal-overlay.open{display:flex;}
+.santri-modal{background:#fff;border-radius:20px;padding:28px 24px 24px;width:100%;max-width:380px;box-shadow:0 24px 64px rgba(0,0,0,.2);}
+.santri-modal h3{font-size:18px;font-weight:800;color:#0f1117;margin-bottom:20px;}
+.santri-modal-input{width:100%;border:1.5px solid #e3e6f0;border-radius:10px;padding:12px 14px;font-size:14px;font-family:inherit;outline:none;margin-bottom:12px;box-sizing:border-box;color:#0f1117;transition:border-color .15s;}
+.santri-modal-input:focus{border-color:#4f46e5;}
+.santri-modal-input::placeholder{color:#b0b5c8;}
+.santri-modal-btns{display:flex;gap:8px;margin-top:4px;}
+.santri-modal-cancel{flex:1;padding:11px;border-radius:10px;border:1.5px solid #e3e6f0;background:#fff;color:#3d4259;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;}
+.santri-modal-save{flex:1;padding:11px;border-radius:10px;border:none;background:linear-gradient(135deg,#4f46e5,#7c3aed);color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;}
+.santri-loading{text-align:center;padding:30px;color:rgba(255,255,255,.5);font-size:14px;}
+
 </style>
 </head>
 <body>
@@ -673,6 +712,38 @@
     <div class="lock-footer">Progres Materi Pondok · 2026</div>
   </div>
 </div>
+
+<!-- HALAMAN PILIH SANTRI -->
+<div class="santri-screen" id="santriScreen">
+  <div class="santri-header">
+    <div class="santri-header-icon">🕌</div>
+    <div class="santri-header-title">Kertas Pantau</div>
+    <div class="santri-header-sub">Pilih santri untuk melanjutkan</div>
+  </div>
+  <div class="santri-body">
+    <input class="santri-search" id="santriSearch" type="text" placeholder="🔍  Cari santri..." oninput="filterSantri()">
+    <div class="santri-list" id="santriList">
+      <div class="santri-loading">Memuat data santri...</div>
+    </div>
+    <button class="santri-add-btn" onclick="openTambahSantri()">
+      <span style="font-size:18px">+</span> Tambah Santri Baru
+    </button>
+  </div>
+</div>
+
+<!-- MODAL TAMBAH SANTRI -->
+<div class="santri-modal-overlay" id="santriModalOverlay">
+  <div class="santri-modal">
+    <h3>Tambah Santri Baru</h3>
+    <input class="santri-modal-input" id="santriModalNama" type="text" placeholder="Nama santri" maxlength="60">
+    <input class="santri-modal-input" id="santriModalKelas" type="text" placeholder="Kelas (opsional)" maxlength="40">
+    <div class="santri-modal-btns">
+      <button class="santri-modal-cancel" onclick="closeTambahSantri()">Batal</button>
+      <button class="santri-modal-save" onclick="simpanSantri()">Simpan</button>
+    </div>
+  </div>
+</div>
+
 <div class="wrap">
 
   <div class="topbar">
@@ -699,6 +770,7 @@
     <button type="button" class="btn-primary" id="addRow">+ Tambah Materi</button>
     <button type="button" class="btn-ghost" id="importBtn">Impor CSV</button>
     <input type="file" id="importFile" accept=".csv,text/csv" style="display:none;">
+    <button type="button" class="btn-ghost" onclick="gantiSantri()" title="Kembali ke daftar santri">⇐ Ganti Santri</button>
     <button type="button" class="btn-ghost" id="exportBtn">Ekspor CSV</button>
     <button type="button" class="btn-ghost" id="exportXlsxBtn">📊 Ekspor Excel</button>
     <button type="button" class="btn-ghost" id="backupBtn" title="Simpan seluruh data (termasuk riwayat) ke file .json">Backup (.json)</button>
@@ -864,8 +936,9 @@ async function sbSave(){
   if(!_sbRowId) return;
   try{
     const clean = data.map(r => ({...r, historyOpen: false, babOpen: false}));
+    const identKey = _currentSantriId ? STORAGE_KEY_IDENTITY + '_' + _currentSantriId : STORAGE_KEY_IDENTITY;
     let ident = {};
-    try{ ident = JSON.parse(safeGetStorage(STORAGE_KEY_IDENTITY) || '{}'); } catch(ex){}
+    try{ ident = JSON.parse(safeGetStorage(identKey) || '{}'); } catch(ex){}
     await _sb.from('progres_materi').update({
       data: clean,
       identity: ident,
@@ -889,6 +962,8 @@ function sbSaveIdentity(identity){
       waited += 200;
     }
     if(!_sbRowId) return;
+    const identKey = _currentSantriId ? STORAGE_KEY_IDENTITY + '_' + _currentSantriId : STORAGE_KEY_IDENTITY;
+    safeSetStorage(identKey, JSON.stringify(identity));
     try{
       await _sb.from('progres_materi')
         .update({ identity: identity, updated_at: new Date().toISOString() })
@@ -956,6 +1031,221 @@ function sbSubscribe(){
       }
     })
     .subscribe();
+}
+
+
+/* ============================================================
+   MULTI-SANTRI
+   ============================================================ */
+let _currentSantriId   = null;
+let _currentSantriNama = '';
+let _allSantri = [];
+
+// Load daftar santri dari Supabase
+async function loadSantriList(){
+  try{
+    const {data, error} = await _sb.from('santri').select('*').order('created_at', {ascending:true});
+    if(error) throw error;
+    _allSantri = data || [];
+    renderSantriList(_allSantri);
+  } catch(e){
+    console.warn('Gagal load santri:', e);
+    document.getElementById('santriList').innerHTML = '<div class="santri-empty">Gagal memuat data santri. Coba refresh.</div>';
+  }
+}
+
+// Hitung progres santri dari data progres_materi
+function calcSantriPct(santriData){
+  if(!Array.isArray(santriData) || santriData.length === 0) return 0;
+  let totH=0, totS=0;
+  santriData.forEach(row => {
+    (row.bab||[]).forEach(b => {
+      const h = Number(b.halaman)||0;
+      const s = Math.min(Math.max(Number(b.sisa)||0,0),h);
+      totH += h; totS += s;
+    });
+  });
+  return totH<=0 ? 0 : Math.round(((totH-totS)/totH)*100);
+}
+
+// Render daftar santri
+function renderSantriList(list){
+  const el = document.getElementById('santriList');
+  if(!list || list.length === 0){
+    el.innerHTML = '<div class="santri-empty">Belum ada santri.<br>Tambahkan santri baru di bawah.</div>';
+    return;
+  }
+  el.innerHTML = list.map(s => {
+    const inisial = (s.nama||'?').charAt(0).toUpperCase();
+    const pct = s._pct !== undefined ? s._pct : '...';
+    return `<div class="santri-item" onclick="pilihSantri('${s.id}','${(s.nama||'').replace(/'/g,"\'")}')">
+      <div class="santri-avatar">${inisial}</div>
+      <div class="santri-info">
+        <div class="santri-item-nama">${s.nama||''}</div>
+        <div class="santri-item-kelas">${s.kelas||'Kelas belum diisi'}</div>
+      </div>
+      <div class="santri-item-pct">${pct}%</div>
+      <button class="santri-delete-btn" onclick="event.stopPropagation();hapusSantri('${s.id}','${(s.nama||'').replace(/'/g,"\'")}')">✕</button>
+    </div>`;
+  }).join('');
+  // Load pct async
+  loadSantriPct(list);
+}
+
+async function loadSantriPct(list){
+  for(const s of list){
+    try{
+      const {data:rows} = await _sb.from('progres_materi').select('data').eq('santri_id', s.id).limit(1);
+      const pct = rows && rows[0] ? calcSantriPct(rows[0].data) : 0;
+      s._pct = pct;
+      // Update pct di DOM
+      const items = document.querySelectorAll('.santri-item');
+      items.forEach(item => {
+        const nameEl = item.querySelector('.santri-item-nama');
+        if(nameEl && nameEl.textContent === s.nama){
+          const pctEl = item.querySelector('.santri-item-pct');
+          if(pctEl) pctEl.textContent = pct + '%';
+        }
+      });
+    } catch(e){}
+  }
+}
+
+function filterSantri(){
+  const q = (document.getElementById('santriSearch').value||'').toLowerCase();
+  const filtered = _allSantri.filter(s => (s.nama||'').toLowerCase().includes(q) || (s.kelas||'').toLowerCase().includes(q));
+  renderSantriList(filtered);
+}
+
+// Pilih santri → load data & masuk ke editor
+async function pilihSantri(id, nama){
+  _currentSantriId   = id;
+  _currentSantriNama = nama;
+  sessionStorage.setItem('current_santri_id', id);
+  sessionStorage.setItem('current_santri_nama', nama);
+
+  // Tampilkan loading di wrap
+  document.getElementById('santriScreen').classList.remove('active');
+  document.querySelector('.wrap').style.display = 'block';
+
+  // Load data progres santri ini
+  await sbLoadSantri(id);
+  data = data.map(normalizeRow);
+
+  // Update nama/kelas di field
+  try{
+    const ident = JSON.parse(safeGetStorage(STORAGE_KEY_IDENTITY + '_' + id) || '{}');
+    const namEl = document.getElementById('identityNama');
+    const kelEl = document.getElementById('identityKelas');
+    if(namEl) namEl.value = ident.nama || '';
+    if(kelEl) kelEl.value = ident.kelas || '';
+  } catch(e){}
+
+  render();
+  setSaveStatus(storageAvailable ? 'saved' : 'error');
+  sbSubscribeSantri(id);
+}
+
+// Load data progres satu santri
+async function sbLoadSantri(santriId){
+  try{
+    const {data:rows, error} = await _sb.from('progres_materi').select('*').eq('santri_id', santriId).limit(1);
+    if(error) throw error;
+    if(rows && rows.length > 0){
+      _sbRowId = rows[0].id;
+      const remote = rows[0].data;
+      if(Array.isArray(remote) && remote.length > 0){
+        data = remote.map(normalizeRow);
+        safeSetStorage(STORAGE_KEY + '_' + santriId, JSON.stringify(data));
+      } else {
+        data = defaultData();
+      }
+      const remoteIdent = rows[0].identity;
+      if(remoteIdent && (remoteIdent.nama || remoteIdent.kelas)){
+        safeSetStorage(STORAGE_KEY_IDENTITY + '_' + santriId, JSON.stringify(remoteIdent));
+      }
+    } else {
+      // Santri baru — buat baris progres baru
+      data = defaultData();
+      const {data:newRow, error:insErr} = await _sb.from('progres_materi').insert({
+        data: [],
+        identity: {},
+        santri_id: santriId,
+        santri_nama: _currentSantriNama
+      }).select().single();
+      if(!insErr && newRow) _sbRowId = newRow.id;
+    }
+  } catch(e){
+    console.warn('sbLoadSantri gagal:', e);
+    data = defaultData();
+  }
+}
+
+// Subscribe realtime untuk santri yang sedang aktif
+let _santriChannel = null;
+function sbSubscribeSantri(santriId){
+  if(_santriChannel) _sb.removeChannel(_santriChannel);
+  _santriChannel = _sb.channel('santri-progres-' + santriId)
+    .on('postgres_changes',{event:'UPDATE',schema:'public',table:'progres_materi',filter:`santri_id=eq.${santriId}`}, payload => {
+      const remote = payload.new?.data;
+      if(!Array.isArray(remote) || remote.length === 0) return;
+      if(_userEditing){ _pendingRemote = remote; return; }
+      applyRemoteUpdate(remote);
+    })
+    .subscribe();
+}
+
+// Tambah santri baru
+function openTambahSantri(){
+  document.getElementById('santriModalOverlay').classList.add('open');
+  setTimeout(() => document.getElementById('santriModalNama').focus(), 50);
+}
+function closeTambahSantri(){
+  document.getElementById('santriModalOverlay').classList.remove('open');
+  document.getElementById('santriModalNama').value = '';
+  document.getElementById('santriModalKelas').value = '';
+}
+async function simpanSantri(){
+  const nama  = (document.getElementById('santriModalNama').value||'').trim();
+  const kelas = (document.getElementById('santriModalKelas').value||'').trim();
+  if(!nama){ document.getElementById('santriModalNama').focus(); return; }
+  try{
+    const {data:newSantri, error} = await _sb.from('santri').insert({nama, kelas}).select().single();
+    if(error) throw error;
+    _allSantri.push(newSantri);
+    renderSantriList(_allSantri);
+    closeTambahSantri();
+  } catch(e){
+    alert('Gagal menyimpan santri: ' + e.message);
+  }
+}
+document.addEventListener('keydown', e => {
+  if(e.key === 'Enter' && document.getElementById('santriModalOverlay').classList.contains('open')){
+    simpanSantri();
+  }
+});
+
+// Hapus santri
+async function hapusSantri(id, nama){
+  if(!confirm('Hapus santri "' + nama + '"? Semua data progresnya juga akan terhapus.')) return;
+  try{
+    await _sb.from('progres_materi').delete().eq('santri_id', id);
+    await _sb.from('santri').delete().eq('id', id);
+    _allSantri = _allSantri.filter(s => s.id !== id);
+    renderSantriList(_allSantri);
+  } catch(e){
+    alert('Gagal menghapus: ' + e.message);
+  }
+}
+
+// Ganti santri → kembali ke halaman pilih santri
+function gantiSantri(){
+  _currentSantriId = null;
+  _sbRowId = null;
+  if(_santriChannel){ _sb.removeChannel(_santriChannel); _santriChannel = null; }
+  document.querySelector('.wrap').style.display = 'none';
+  document.getElementById('santriScreen').classList.add('active');
+  loadSantriList();
 }
 
 const STORAGE_KEY = 'progres_materi_data_v3';
@@ -2714,30 +3004,36 @@ restoreFileEl.addEventListener('change', () => {
 
 /* ===== LOCK SCREEN ===== */
 (function(){
-  const SANDI = '12xx34xx56';
+  const SANDI_HASH = '8b5e87810cb18b93558ca33a98c950fad981d025221ad74a38b5e1f216cc2622';
   const SESSION_KEY = 'kertas_pantau_unlocked';
+  function hashStr(s){ return Array.from(new Uint8Array(new TextEncoder().encode(s))).map(b=>b.toString(16).padStart(2,'0')).join(''); }
 
   function unlock(){
     const el = document.getElementById('lockScreen');
     if(el) el.style.display = 'none';
     document.body.style.overflow = '';
+    // Tampilkan halaman pilih santri
+    document.getElementById('santriScreen').classList.add('active');
+    loadSantriList();
   }
 
   function checkLock(){
     const input = document.getElementById('lockInput');
     const errEl = document.getElementById('lockError');
     if(!input) return;
-    if(input.value === SANDI){
-      sessionStorage.setItem(SESSION_KEY, '1');
-      unlock();
-    } else {
-      input.classList.add('error');
-      errEl.textContent = 'Sandi salah, coba lagi.';
-      input.value = '';
-      setTimeout(() => {
-        input.classList.remove('error');
-      }, 400);
-    }
+    // Bandingkan hash SHA-256 sandi (sandi asli tidak terlihat di source)
+    crypto.subtle.digest('SHA-256', new TextEncoder().encode(input.value)).then(buf => {
+      const hex = Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+      if(hex === SANDI_HASH){
+        sessionStorage.setItem(SESSION_KEY, '1');
+        unlock();
+      } else {
+        input.classList.add('error');
+        errEl.textContent = 'Sandi salah, coba lagi.';
+        input.value = '';
+        setTimeout(() => { input.classList.remove('error'); }, 400);
+      }
+    });
   }
 
   // Cek session — kalau sudah unlock tadi, langsung buka
@@ -2756,22 +3052,26 @@ restoreFileEl.addEventListener('change', () => {
   window.checkLock = checkLock;
 })();
 
-// Muat data dari Supabase dulu, lalu render
+// Init: setelah unlock → tampilkan halaman pilih santri
 (async () => {
-  setSaveStatus('saving');
-  await sbLoad();
-  data = data.map(normalizeRow);
-  // Isi field nama & kelas dari Supabase ke input form
-  try{
-    const ident = JSON.parse(safeGetStorage(STORAGE_KEY_IDENTITY) || '{}');
-    const namEl = document.getElementById('identityNama');
-    const kelEl = document.getElementById('identityKelas');
-    if(namEl && ident.nama)  namEl.value = ident.nama;
-    if(kelEl && ident.kelas) kelEl.value = ident.kelas;
-  } catch(e){}
-  render();
-  setSaveStatus(storageAvailable ? 'saved' : 'error');
-  sbSubscribe();
+  // Sembunyikan wrap dulu (tampil setelah pilih santri)
+  document.querySelector('.wrap').style.display = 'none';
+
+  // Cek apakah sudah unlock
+  if(sessionStorage.getItem('kertas_pantau_unlocked') === '1'){
+    // Cek apakah ada santri yang sedang aktif dari session
+    const lastSantriId   = sessionStorage.getItem('current_santri_id');
+    const lastSantriNama = sessionStorage.getItem('current_santri_nama');
+    if(lastSantriId){
+      // Langsung masuk ke santri terakhir
+      await pilihSantri(lastSantriId, lastSantriNama||'');
+    } else {
+      // Tampilkan halaman pilih santri
+      document.getElementById('santriScreen').classList.add('active');
+      await loadSantriList();
+    }
+  }
+  // Kalau belum unlock, lock screen sudah handle
 })();
 </script>
 </body>
