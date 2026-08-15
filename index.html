@@ -1078,16 +1078,31 @@ function renderSantriList(list){
   el.innerHTML = list.map(s => {
     const inisial = (s.nama||'?').charAt(0).toUpperCase();
     const pct = s._pct !== undefined ? s._pct : '...';
-    return `<div class="santri-item" onclick="pilihSantri('${s.id}','${(s.nama||'').replace(/'/g,"\'")}')">
+    return `<div class="santri-item" data-id="${s.id}" data-nama="${(s.nama||'').replace(/"/g,'&quot;')}">
       <div class="santri-avatar">${inisial}</div>
       <div class="santri-info">
         <div class="santri-item-nama">${s.nama||''}</div>
         <div class="santri-item-kelas">${s.kelas||'Kelas belum diisi'}</div>
       </div>
-      <div class="santri-item-pct">${pct}%</div>
-      <button class="santri-delete-btn" onclick="event.stopPropagation();hapusSantri('${s.id}','${(s.nama||'').replace(/'/g,"\'")}')">✕</button>
+      <div class="santri-item-pct" id="sp-${s.id}">${pct}${pct==='...'?'':'%'}</div>
+      <button class="santri-delete-btn" data-del-id="${s.id}">✕</button>
     </div>`;
   }).join('');
+
+  // Event delegation — lebih reliable dari onclick inline
+  el.querySelectorAll('.santri-item').forEach(item => {
+    const id   = item.dataset.id;
+    const nama = item.dataset.nama;
+    item.addEventListener('click', () => pilihSantri(id, nama));
+    const delBtn = item.querySelector('.santri-delete-btn');
+    if(delBtn){
+      delBtn.addEventListener('click', e => {
+        e.stopPropagation();
+        hapusSantri(id, nama);
+      });
+    }
+  });
+
   // Load pct async
   loadSantriPct(list);
 }
@@ -1227,14 +1242,18 @@ document.addEventListener('keydown', e => {
 
 // Hapus santri
 async function hapusSantri(id, nama){
-  if(!confirm('Hapus santri "' + nama + '"? Semua data progresnya juga akan terhapus.')) return;
+  if(!confirm('Hapus santri "' + (nama||'ini') + '"?\nSemua data progresnya juga akan terhapus.')) return;
   try{
-    await _sb.from('progres_materi').delete().eq('santri_id', id);
-    await _sb.from('santri').delete().eq('id', id);
+    const {error: e1} = await _sb.from('progres_materi').delete().eq('santri_id', id);
+    if(e1) throw e1;
+    const {error: e2} = await _sb.from('santri').delete().eq('id', id);
+    if(e2) throw e2;
+    // Hapus dari array lokal dan re-render
     _allSantri = _allSantri.filter(s => s.id !== id);
     renderSantriList(_allSantri);
   } catch(e){
     alert('Gagal menghapus: ' + e.message);
+    console.error(e);
   }
 }
 
